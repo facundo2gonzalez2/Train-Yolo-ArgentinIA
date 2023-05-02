@@ -1,12 +1,7 @@
 import os
 import json
 import cv2
-
-path_to_json = "/content/drive/MyDrive/ArgentinIA/data_yolo/jsons/"
-
-path_to_dst = "/content/drive/MyDrive/ArgentinIA/data_yolo/output/"
-
-path_to_imgs = "/content/drive/MyDrive/ArgentinIA/data_yolo/imgs/"
+import argparse
 
 classes = {
     "Diario": 0,
@@ -68,55 +63,68 @@ def procesar_bounding_box(width_img, height_img, bounding_box):
         return None
 
 
-# iterate through all jsons in the folder
-for i, json_file in enumerate(os.listdir(path_to_json)):
-    if not json_file.endswith(".json"):
-        continue
 
-    nombre_archivo = os.path.splitext(json_file)[0]
-    txt = os.path.join(path_to_dst, nombre_archivo + ".txt")
-    ruta_imagen = os.path.join(path_to_imgs, json_file.replace("json", "tif"))
 
-    yolo_label = ""
-    data = leer_json(os.path.join(path_to_json, json_file))
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path_to_json', type=str, help='Path to the JSON folder')
+    parser.add_argument('--path_to_dst', type=str, help='Path to the destination folder')
+    parser.add_argument('--path_to_imgs', type=str, help='Path to the images folder')
+    args = parser.parse_args()
 
-    img = cv2.imread(ruta_imagen)
-    width_img = img.shape[1]
-    height_img = img.shape[0]
+    path_to_json = args.path_to_json
+    path_to_dst  = args.path_to_dst
+    path_to_imgs = args.path_to_imgs
 
-    for key in ["Diario", "Fecha"]:
-        label = data.pop(key, None)
-        if label and isinstance(label, dict):
-            bounding_box = label.get("bounding_box", None)
-            if bounding_box:
-                line = procesar_bounding_box(width_img, height_img, bounding_box)
-                if line:
-                    yolo_label += line + "\n"
+    # iterate through all jsons in the folder
+    for i, json_file in enumerate(os.listdir(path_to_json)):
+        if not json_file.endswith(".json"):
+            continue
 
-    notas = data.get("Notas", [])
+        nombre_archivo = os.path.splitext(json_file)[0]
+        txt = os.path.join(path_to_dst, nombre_archivo + ".txt")
+        ruta_imagen = os.path.join(path_to_imgs, json_file.replace("json", "tif"))
 
-    if not isinstance(notas, list):
-        continue
+        yolo_label = ""
+        data = leer_json(os.path.join(path_to_json, json_file))
 
-    for nota in notas:
-        for key, labels in nota.items():
-            if not (key in classes.keys()) or labels is None:
-                continue
+        img = cv2.imread(ruta_imagen)
+        width_img = img.shape[1]
+        height_img = img.shape[0]
 
-            if isinstance(labels, dict):
-                labels = [labels]
-
-            for label in labels:
+        for key in ["Diario", "Fecha"]:
+            label = data.pop(key, None)
+            if label and isinstance(label, dict):
                 bounding_box = label.get("bounding_box", None)
                 if bounding_box:
                     line = procesar_bounding_box(width_img, height_img, bounding_box)
                     if line:
                         yolo_label += line + "\n"
 
-    if yolo_label == "":
-        continue
+        notas = data.get("Notas", [])
 
-    with open(txt, "w", encoding="utf-8") as f:
-        f.write(yolo_label)
+        if not isinstance(notas, list):
+            continue
 
-    print(f"{i} of {len(os.listdir(path_to_json))}")
+        for nota in notas:
+            for key, labels in nota.items():
+                if not (key in classes.keys()) or labels is None:
+                    continue
+
+                if isinstance(labels, dict):
+                    labels = [labels]
+
+                for label in labels:
+                    bounding_box = label.get("bounding_box", None)
+                    if bounding_box:
+                        line = procesar_bounding_box(width_img, height_img, bounding_box)
+                        if line:
+                            yolo_label += line + "\n"
+
+        if yolo_label == "":
+            continue
+
+        with open(txt, "w", encoding="utf-8") as f:
+            f.write(yolo_label)
+
+        print(f"{i} of {len(os.listdir(path_to_json))}")
