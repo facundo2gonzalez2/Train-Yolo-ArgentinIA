@@ -3,4 +3,4 @@ Modifiación de yolov7 preparado para entrrenar al detector de partes de diario 
 
 ## Funcionamiento:
 
-En el siguiente [https://drive.google.com/file/d/1AToJgpVCAeJ89-48qdk3PY5cDsgZ573z/view?usp=sharing]Notebook
+En el siguiente JupyterNotebook(https://drive.google.com/file/d/1AToJgpVCAeJ89-48qdk3PY5cDsgZ573z/view?usp=sharing) se realiza el reentrenamiento necesario para el proyecto.
